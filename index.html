@@ -27,9 +27,11 @@
   --blue: #74b9ff;
   --push: #6c5ce7;
   --legs-a: #00cec9;
-  --yoga: #fdcb6e;
+  --core: #fdcb6e;
   --pull: #74b9ff;
+  --yoga-fri: #fdcb6e;
   --legs-b: #ff6b6b;
+  --nidra: #55efc4;
   --radius: 12px;
 }
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -177,9 +179,11 @@ h3 { font-size:15px; margin-bottom:8px; font-weight:600; color:var(--text2); }
 }
 .day-monday { background: var(--push); }
 .day-tuesday { background: var(--legs-a); }
-.day-wednesday { background: var(--yoga); color:#333; }
+.day-wednesday { background: var(--core); color:#333; }
 .day-thursday { background: var(--pull); }
-.day-friday { background: var(--legs-b); }
+.day-friday { background: var(--yoga-fri); color:#333; }
+.day-saturday { background: var(--legs-b); }
+.day-sunday { background: var(--nidra); color:#333; }
 
 .flex { display:flex; }
 .flex-between { display:flex; justify-content:space-between; align-items:center; }
@@ -217,6 +221,35 @@ h3 { font-size:15px; margin-bottom:8px; font-weight:600; color:var(--text2); }
   font-size:13px;
   padding: 4px 0;
   display:flex; justify-content:space-between;
+}
+
+/* PROGRAM SELECTOR */
+.program-selector {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.program-selector label {
+  font-size: 13px;
+  color: var(--text2);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.program-selector select {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: var(--text);
+  font-size: 14px !important;
+  outline: none;
+  -webkit-appearance: none;
 }
 
 /* WORKOUT LOG */
@@ -265,6 +298,55 @@ h3 { font-size:15px; margin-bottom:8px; font-weight:600; color:var(--text2); }
 }
 .add-set-btn:active { border-color:var(--accent); color:var(--accent); }
 
+/* WARMUP SECTION */
+.warmup-section {
+  background: var(--surface2);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 10px;
+}
+.warmup-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.warmup-toggle h3 { margin-bottom: 0; color: var(--text); }
+.warmup-toggle .toggle-icon {
+  font-size: 18px;
+  color: var(--text2);
+  transition: transform .2s;
+}
+.warmup-toggle .toggle-icon.open { transform: rotate(180deg); }
+.warmup-items {
+  margin-top: 12px;
+}
+.warmup-items.collapsed { display: none; }
+.warmup-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.warmup-item:last-child { border-bottom: none; }
+.warmup-item input[type=checkbox] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--green);
+  flex-shrink: 0;
+}
+.warmup-item label {
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+}
+.warmup-item .warmup-detail {
+  font-size: 12px;
+  color: var(--text2);
+}
+
 /* CALENDAR */
 .cal-grid {
   display:grid;
@@ -304,9 +386,11 @@ h3 { font-size:15px; margin-bottom:8px; font-weight:600; color:var(--text2); }
 }
 .cal-day.wt-monday::after { background:var(--push); }
 .cal-day.wt-tuesday::after { background:var(--legs-a); }
-.cal-day.wt-wednesday::after { background:var(--yoga); }
+.cal-day.wt-wednesday::after { background:var(--core); }
 .cal-day.wt-thursday::after { background:var(--pull); }
-.cal-day.wt-friday::after { background:var(--legs-b); }
+.cal-day.wt-friday::after { background:var(--yoga-fri); }
+.cal-day.wt-saturday::after { background:var(--legs-b); }
+.cal-day.wt-sunday::after { background:var(--nidra); }
 
 .cal-nav {
   display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;
@@ -461,6 +545,10 @@ h3 { font-size:15px; margin-bottom:8px; font-weight:600; color:var(--text2); }
 <!-- DASHBOARD -->
 <div class="page active" id="page-dashboard">
   <h1>Workout Tracker</h1>
+  <div class="program-selector">
+    <label>Program:</label>
+    <select id="programSelect" onchange="switchProgram(this.value)"></select>
+  </div>
   <div id="dashboard-today" class="card"></div>
   <div id="dashboard-streak" class="card">
     <h3>This Week</h3>
@@ -481,10 +569,12 @@ h3 { font-size:15px; margin-bottom:8px; font-weight:600; color:var(--text2); }
       <label>Workout Day</label>
       <select id="logDayType">
         <option value="monday">Monday - Upper Push + Balance</option>
-        <option value="tuesday">Tuesday - Lower Body A (Quad)</option>
-        <option value="wednesday">Wednesday - Yoga</option>
+        <option value="tuesday">Tuesday - Lower Body A (Quad) + Hip Mobility</option>
+        <option value="wednesday">Wednesday - Core</option>
         <option value="thursday">Thursday - Upper Pull + Balance</option>
-        <option value="friday">Friday - Lower Body B (Posterior)</option>
+        <option value="friday">Friday - Yoga</option>
+        <option value="saturday">Saturday - Lower Body B (Posterior) + Hip Mobility</option>
+        <option value="sunday">Sunday - Yoga Nidra</option>
       </select>
     </div>
     <div class="form-group">
@@ -565,80 +655,367 @@ h3 { font-size:15px; margin-bottom:8px; font-weight:600; color:var(--text2); }
 
 <script>
 // ==================== EXERCISE DATA ====================
-const PROGRAM = {
-  monday: {
-    label: 'Upper Push + Balance',
-    color: '#6c5ce7',
-    exercises: [
-      { name:'Barbell Bench Press', sets:4, reps:'6-8', type:'strength' },
-      { name:'Standing Single-Arm DB Press', sets:3, reps:'8-10', type:'strength' },
-      { name:'Incline DB Bench Press', sets:3, reps:'8-10', type:'strength' },
-      { name:'Cable Flye', sets:3, reps:'12', type:'strength' },
-      { name:'Dips', sets:3, reps:'8-10', type:'strength' },
-      { name:'Tricep Rope Pushdown', sets:3, reps:'12-15', type:'strength' },
-      { name:'Overhead Tricep Extension', sets:3, reps:'12', type:'strength' },
-      { name:'Single-Leg Stand on BOSU', sets:3, reps:'30s each', type:'balance' },
-      { name:'Single-Leg Cable Press', sets:2, reps:'10 each', type:'balance' },
-      { name:'Tandem Stance Pallof Press', sets:2, reps:'10 each', type:'balance' },
-    ]
+
+// Shared warm-up exercises (prepended to Mon/Tue/Thu/Sat)
+const WARMUP_EXERCISES = [
+  { name:'90/90 Hip Switches', sets:2, reps:'8 each', type:'warmup' },
+  { name:'Supine Hip CARs', sets:2, reps:'5 each', type:'warmup' },
+  { name:'Half-Kneeling Hip Flexor Stretch', sets:2, reps:'30s each', type:'warmup' },
+  { name:'Banded Clamshells', sets:2, reps:'15 each', type:'warmup' },
+  { name:'Glute Bridge w/ 3s Hold', sets:2, reps:'10', type:'warmup' },
+  { name:'Dead Bug', sets:2, reps:'8 each', type:'warmup' },
+];
+
+// Shared balance exercises (same across all months)
+const BALANCE_PUSH = [
+  { name:'Single-Leg Stand on BOSU', sets:3, reps:'30s each', type:'balance' },
+  { name:'Single-Leg Cable Press', sets:2, reps:'10 each', type:'balance' },
+  { name:'Tandem Stance Pallof Press', sets:2, reps:'10 each', type:'balance' },
+];
+const BALANCE_PULL = [
+  { name:'Single-Leg RDL', sets:3, reps:'8 each', type:'balance' },
+  { name:'BOSU Single-Leg Stance w/ Band Pull', sets:2, reps:'30s each', type:'balance' },
+  { name:'Half-Kneeling Cable Chop', sets:2, reps:'10 each', type:'balance' },
+];
+
+// Hip mobility finishers
+const HIP_MOBILITY_TUESDAY = [
+  { name:'Pigeon Pose (modified)', sets:2, reps:'60s each', type:'mobility' },
+  { name:'Adductor Rockback Stretch', sets:2, reps:'45s each', type:'mobility' },
+  { name:'Standing Figure-4 Stretch', sets:2, reps:'45s each', type:'mobility' },
+  { name:'Supine Hip IR Stretch', sets:2, reps:'45s each', type:'mobility' },
+];
+const HIP_MOBILITY_SATURDAY = [
+  { name:'Couch Stretch', sets:2, reps:'60s each', type:'mobility' },
+  { name:'Frog Stretch', sets:2, reps:'45s', type:'mobility' },
+  { name:'Supine Piriformis Stretch', sets:2, reps:'45s each', type:'mobility' },
+  { name:'Prone Hip IR', sets:2, reps:'45s each', type:'mobility' },
+];
+
+// ==================== 3-MONTH PROGRAMS ====================
+const PROGRAMS = {
+  month1: {
+    label: 'Month 1 — Foundation',
+    program: {
+      monday: {
+        label: 'Upper Push + Balance',
+        color: '#6c5ce7',
+        exercises: [
+          ...WARMUP_EXERCISES,
+          { name:'Barbell Bench Press', sets:4, reps:'6-8', type:'strength' },
+          { name:'Standing Single-Arm DB Press', sets:3, reps:'8-10', type:'strength' },
+          { name:'Incline DB Bench Press', sets:3, reps:'8-10', type:'strength' },
+          { name:'Cable Flye', sets:3, reps:'12', type:'strength' },
+          { name:'Dips', sets:3, reps:'8-10', type:'strength' },
+          { name:'Tricep Rope Pushdown', sets:3, reps:'12-15', type:'strength' },
+          { name:'Overhead Tricep Extension', sets:3, reps:'12', type:'strength' },
+          ...BALANCE_PUSH,
+        ]
+      },
+      tuesday: {
+        label: 'Lower Body A (Quad) + Hip Mobility',
+        color: '#00cec9',
+        exercises: [
+          ...WARMUP_EXERCISES,
+          { name:'Box Squat', sets:4, reps:'6-8', type:'strength' },
+          { name:'Bulgarian Split Squat', sets:3, reps:'8-10', type:'strength' },
+          { name:'Leg Press', sets:3, reps:'10-12', type:'strength' },
+          { name:'Walking Lunges', sets:3, reps:'10/leg', type:'strength' },
+          { name:'Leg Extension', sets:3, reps:'12-15', type:'strength' },
+          { name:'Single-Leg Calf Raise', sets:3, reps:'12-15', type:'strength' },
+          ...HIP_MOBILITY_TUESDAY,
+        ]
+      },
+      wednesday: {
+        label: 'Core',
+        color: '#fdcb6e',
+        exercises: [
+          { name:'McGill Curl-Up', sets:3, reps:'10', type:'strength' },
+          { name:'Dead Bug w/ Band', sets:3, reps:'8 each', type:'strength' },
+          { name:'Side Plank', sets:3, reps:'30s each', type:'strength' },
+          { name:'Pallof Press', sets:3, reps:'10 each', type:'strength' },
+          { name:'Bird Dog', sets:3, reps:'8 each', type:'strength' },
+          { name:'Ab Wheel Rollout', sets:3, reps:'8', type:'strength' },
+          { name:"Farmer's Walk", sets:3, reps:'40m', type:'strength' },
+          { name:'Hanging Knee Raise', sets:3, reps:'10', type:'strength' },
+        ]
+      },
+      thursday: {
+        label: 'Upper Pull + Balance',
+        color: '#74b9ff',
+        exercises: [
+          ...WARMUP_EXERCISES,
+          { name:'Weighted Pull-Ups', sets:4, reps:'6-8', type:'strength' },
+          { name:'Single-Arm DB Row', sets:3, reps:'8-10', type:'strength' },
+          { name:'Seated Cable Row', sets:3, reps:'10-12', type:'strength' },
+          { name:'Face Pulls', sets:3, reps:'15', type:'strength' },
+          { name:'Barbell Curl', sets:3, reps:'10-12', type:'strength' },
+          { name:'Hammer Curl', sets:3, reps:'12', type:'strength' },
+          { name:'Reverse Curl', sets:2, reps:'15', type:'strength' },
+          ...BALANCE_PULL,
+        ]
+      },
+      friday: {
+        label: 'Yoga',
+        color: '#fdcb6e',
+        exercises: [
+          { name:'Yoga Class', sets:1, reps:'session', type:'yoga' },
+        ]
+      },
+      saturday: {
+        label: 'Lower Body B (Posterior) + Hip Mobility',
+        color: '#ff6b6b',
+        exercises: [
+          ...WARMUP_EXERCISES,
+          { name:'Trap Bar Deadlift', sets:4, reps:'5-6', type:'strength' },
+          { name:'Hip Thrust', sets:4, reps:'8-10', type:'strength' },
+          { name:'Romanian Deadlift', sets:3, reps:'8-10', type:'strength' },
+          { name:'Nordic Hamstring Curl', sets:3, reps:'6-8', type:'strength' },
+          { name:'Cable Pull-Through', sets:3, reps:'12-15', type:'strength' },
+          { name:'Single-Leg Calf Raise', sets:3, reps:'12-15', type:'strength' },
+          ...HIP_MOBILITY_SATURDAY,
+        ]
+      },
+      sunday: {
+        label: 'Yoga Nidra',
+        color: '#55efc4',
+        exercises: [
+          { name:'Yoga Nidra', sets:1, reps:'session', type:'yoga' },
+        ]
+      },
+    }
   },
-  tuesday: {
-    label: 'Lower Body A (Quad Focus)',
-    color: '#00cec9',
-    exercises: [
-      { name:'Box Squat', sets:4, reps:'6-8', type:'strength' },
-      { name:'Bulgarian Split Squat', sets:3, reps:'8-10', type:'strength' },
-      { name:'Leg Press', sets:3, reps:'10-12', type:'strength' },
-      { name:'Walking Lunges', sets:3, reps:'10/leg', type:'strength' },
-      { name:'Leg Extension', sets:3, reps:'12-15', type:'strength' },
-      { name:'Single-Leg Calf Raise', sets:3, reps:'12-15', type:'strength' },
-    ]
+  month2: {
+    label: 'Month 2 — Variation',
+    program: {
+      monday: {
+        label: 'Upper Push + Balance',
+        color: '#6c5ce7',
+        exercises: [
+          ...WARMUP_EXERCISES,
+          { name:'Floor Press', sets:4, reps:'6-8', type:'strength' },
+          { name:'Arnold Press', sets:3, reps:'8-10', type:'strength' },
+          { name:'Low Incline DB Bench', sets:3, reps:'8-10', type:'strength' },
+          { name:'Pec Deck', sets:3, reps:'12', type:'strength' },
+          { name:'Weighted Dips', sets:3, reps:'8-10', type:'strength' },
+          { name:'Cable Overhead Extension', sets:3, reps:'12-15', type:'strength' },
+          { name:'Skullcrushers', sets:3, reps:'12', type:'strength' },
+          ...BALANCE_PUSH,
+        ]
+      },
+      tuesday: {
+        label: 'Lower Body A (Quad) + Hip Mobility',
+        color: '#00cec9',
+        exercises: [
+          ...WARMUP_EXERCISES,
+          { name:'Front Squat (limited depth)', sets:4, reps:'6-8', type:'strength' },
+          { name:'Step-Ups', sets:3, reps:'8-10', type:'strength' },
+          { name:'Hack Squat', sets:3, reps:'10-12', type:'strength' },
+          { name:'Reverse Lunge', sets:3, reps:'10/leg', type:'strength' },
+          { name:'Sissy Squat', sets:3, reps:'12-15', type:'strength' },
+          { name:'Seated Calf Raise', sets:3, reps:'12-15', type:'strength' },
+          ...HIP_MOBILITY_TUESDAY,
+        ]
+      },
+      wednesday: {
+        label: 'Core',
+        color: '#fdcb6e',
+        exercises: [
+          { name:'Ab Rollout from Knees', sets:3, reps:'10', type:'strength' },
+          { name:'Banded Dead Bug', sets:3, reps:'8 each', type:'strength' },
+          { name:'Copenhagen Plank', sets:3, reps:'30s each', type:'strength' },
+          { name:'Cable Rotation', sets:3, reps:'10 each', type:'strength' },
+          { name:'Bear Crawl', sets:3, reps:'8 each', type:'strength' },
+          { name:'Decline Plate Sit-Up', sets:3, reps:'8', type:'strength' },
+          { name:'Suitcase Carry', sets:3, reps:'40m', type:'strength' },
+          { name:'Toes to Bar', sets:3, reps:'10', type:'strength' },
+        ]
+      },
+      thursday: {
+        label: 'Upper Pull + Balance',
+        color: '#74b9ff',
+        exercises: [
+          ...WARMUP_EXERCISES,
+          { name:'Chin-Ups', sets:4, reps:'6-8', type:'strength' },
+          { name:'Chest-Supported DB Row', sets:3, reps:'8-10', type:'strength' },
+          { name:'Meadows Row', sets:3, reps:'10-12', type:'strength' },
+          { name:'Band Pull-Apart', sets:3, reps:'15', type:'strength' },
+          { name:'Incline DB Curl', sets:3, reps:'10-12', type:'strength' },
+          { name:'Cross-Body Hammer Curl', sets:3, reps:'12', type:'strength' },
+          { name:'Zottman Curl', sets:2, reps:'15', type:'strength' },
+          ...BALANCE_PULL,
+        ]
+      },
+      friday: {
+        label: 'Yoga',
+        color: '#fdcb6e',
+        exercises: [
+          { name:'Yoga Class', sets:1, reps:'session', type:'yoga' },
+        ]
+      },
+      saturday: {
+        label: 'Lower Body B (Posterior) + Hip Mobility',
+        color: '#ff6b6b',
+        exercises: [
+          ...WARMUP_EXERCISES,
+          { name:'Sumo Deadlift (moderate stance)', sets:4, reps:'5-6', type:'strength' },
+          { name:'Barbell Glute Bridge', sets:4, reps:'8-10', type:'strength' },
+          { name:'Stiff-Leg Deadlift', sets:3, reps:'8-10', type:'strength' },
+          { name:'Seated Hamstring Curl', sets:3, reps:'6-8', type:'strength' },
+          { name:'Banded Hip Thrust', sets:3, reps:'12-15', type:'strength' },
+          { name:'Standing Calf Raise', sets:3, reps:'12-15', type:'strength' },
+          ...HIP_MOBILITY_SATURDAY,
+        ]
+      },
+      sunday: {
+        label: 'Yoga Nidra',
+        color: '#55efc4',
+        exercises: [
+          { name:'Yoga Nidra', sets:1, reps:'session', type:'yoga' },
+        ]
+      },
+    }
   },
-  wednesday: {
-    label: 'Yoga',
-    color: '#fdcb6e',
-    exercises: [
-      { name:'Yoga Class', sets:1, reps:'session', type:'yoga' },
-    ]
+  month3: {
+    label: 'Month 3 — Intensity',
+    program: {
+      monday: {
+        label: 'Upper Push + Balance',
+        color: '#6c5ce7',
+        exercises: [
+          ...WARMUP_EXERCISES,
+          { name:'DB Bench Press', sets:4, reps:'6-8', type:'strength' },
+          { name:'Landmine Press', sets:3, reps:'8-10', type:'strength' },
+          { name:'Machine Incline Press', sets:3, reps:'8-10', type:'strength' },
+          { name:'Cable Crossover', sets:3, reps:'12', type:'strength' },
+          { name:'Ring Dips', sets:3, reps:'8-10', type:'strength' },
+          { name:'French Press', sets:3, reps:'12-15', type:'strength' },
+          { name:'Tricep Kickback', sets:3, reps:'12', type:'strength' },
+          ...BALANCE_PUSH,
+        ]
+      },
+      tuesday: {
+        label: 'Lower Body A (Quad) + Hip Mobility',
+        color: '#00cec9',
+        exercises: [
+          ...WARMUP_EXERCISES,
+          { name:'Safety Bar Squat', sets:4, reps:'6-8', type:'strength' },
+          { name:'Goblet Squat', sets:3, reps:'8-10', type:'strength' },
+          { name:'Single-Leg Leg Press', sets:3, reps:'10-12', type:'strength' },
+          { name:'Lateral Lunge', sets:3, reps:'10/leg', type:'strength' },
+          { name:'Terminal Knee Extension', sets:3, reps:'12-15', type:'strength' },
+          { name:'Donkey Calf Raise', sets:3, reps:'12-15', type:'strength' },
+          ...HIP_MOBILITY_TUESDAY,
+        ]
+      },
+      wednesday: {
+        label: 'Core',
+        color: '#fdcb6e',
+        exercises: [
+          { name:'Hollow Body Hold', sets:3, reps:'10', type:'strength' },
+          { name:'Stir the Pot', sets:3, reps:'8 each', type:'strength' },
+          { name:'Windmill', sets:3, reps:'30s each', type:'strength' },
+          { name:'Cable Chop High-to-Low', sets:3, reps:'10 each', type:'strength' },
+          { name:'Dead Bug Pullover', sets:3, reps:'8 each', type:'strength' },
+          { name:'Plank Shoulder Tap', sets:3, reps:'8', type:'strength' },
+          { name:'Trap Bar Carry', sets:3, reps:'40m', type:'strength' },
+          { name:'Hanging L-Sit', sets:3, reps:'10', type:'strength' },
+        ]
+      },
+      thursday: {
+        label: 'Upper Pull + Balance',
+        color: '#74b9ff',
+        exercises: [
+          ...WARMUP_EXERCISES,
+          { name:'Neutral-Grip Pull-Ups', sets:4, reps:'6-8', type:'strength' },
+          { name:'Pendlay Row', sets:3, reps:'8-10', type:'strength' },
+          { name:'T-Bar Row', sets:3, reps:'10-12', type:'strength' },
+          { name:'Rear Delt Fly', sets:3, reps:'15', type:'strength' },
+          { name:'Spider Curl', sets:3, reps:'10-12', type:'strength' },
+          { name:'Pinwheel Curl', sets:3, reps:'12', type:'strength' },
+          { name:'Wrist Curl', sets:2, reps:'15', type:'strength' },
+          ...BALANCE_PULL,
+        ]
+      },
+      friday: {
+        label: 'Yoga',
+        color: '#fdcb6e',
+        exercises: [
+          { name:'Yoga Class', sets:1, reps:'session', type:'yoga' },
+        ]
+      },
+      saturday: {
+        label: 'Lower Body B (Posterior) + Hip Mobility',
+        color: '#ff6b6b',
+        exercises: [
+          ...WARMUP_EXERCISES,
+          { name:'Block Pull Deadlift', sets:4, reps:'5-6', type:'strength' },
+          { name:'Single-Leg Hip Thrust', sets:4, reps:'8-10', type:'strength' },
+          { name:'Good Morning', sets:3, reps:'8-10', type:'strength' },
+          { name:'Slider Hamstring Curl', sets:3, reps:'6-8', type:'strength' },
+          { name:'Kettlebell Swing', sets:3, reps:'12-15', type:'strength' },
+          { name:'Tibialis Raise', sets:3, reps:'12-15', type:'strength' },
+          ...HIP_MOBILITY_SATURDAY,
+        ]
+      },
+      sunday: {
+        label: 'Yoga Nidra',
+        color: '#55efc4',
+        exercises: [
+          { name:'Yoga Nidra', sets:1, reps:'session', type:'yoga' },
+        ]
+      },
+    }
   },
-  thursday: {
-    label: 'Upper Pull + Balance',
-    color: '#74b9ff',
-    exercises: [
-      { name:'Weighted Pull-Ups', sets:4, reps:'6-8', type:'strength' },
-      { name:'Single-Arm DB Row', sets:3, reps:'8-10', type:'strength' },
-      { name:'Seated Cable Row', sets:3, reps:'10-12', type:'strength' },
-      { name:'Face Pulls', sets:3, reps:'15', type:'strength' },
-      { name:'Barbell Curl', sets:3, reps:'10-12', type:'strength' },
-      { name:'Hammer Curl', sets:3, reps:'12', type:'strength' },
-      { name:'Reverse Curl', sets:2, reps:'15', type:'strength' },
-      { name:'Single-Leg RDL', sets:3, reps:'8 each', type:'balance' },
-      { name:'BOSU Single-Leg Stance w/ Band Pull', sets:2, reps:'30s each', type:'balance' },
-      { name:'Half-Kneeling Cable Chop', sets:2, reps:'10 each', type:'balance' },
-    ]
-  },
-  friday: {
-    label: 'Lower Body B (Posterior Chain)',
-    color: '#ff6b6b',
-    exercises: [
-      { name:'Trap Bar Deadlift', sets:4, reps:'5-6', type:'strength' },
-      { name:'Hip Thrust', sets:4, reps:'8-10', type:'strength' },
-      { name:'Romanian Deadlift', sets:3, reps:'8-10', type:'strength' },
-      { name:'Nordic Hamstring Curl', sets:3, reps:'6-8', type:'strength' },
-      { name:'Cable Pull-Through', sets:3, reps:'12-15', type:'strength' },
-      { name:'Single-Leg Calf Raise', sets:3, reps:'12-15', type:'strength' },
-    ]
-  }
 };
+
+// Active program reference (set on init)
+let PROGRAM = PROGRAMS.month1.program;
 
 const KEY_LIFTS = [
   'Barbell Bench Press','Box Squat','Trap Bar Deadlift','Hip Thrust',
   'Weighted Pull-Ups','Romanian Deadlift','Incline DB Bench Press',
-  'Bulgarian Split Squat','Single-Arm DB Row','Barbell Curl'
+  'Bulgarian Split Squat','Single-Arm DB Row','Barbell Curl',
+  // Month 2 compounds
+  'Floor Press','Front Squat (limited depth)','Sumo Deadlift (moderate stance)',
+  'Chin-Ups','Stiff-Leg Deadlift','Barbell Glute Bridge',
+  // Month 3 compounds
+  'DB Bench Press','Safety Bar Squat','Block Pull Deadlift',
+  'Neutral-Grip Pull-Ups','Good Morning','Single-Leg Hip Thrust',
 ];
 
 const DAY_NAMES = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
-const DAY_LABELS = { monday:'Mon', tuesday:'Tue', wednesday:'Wed', thursday:'Thu', friday:'Fri' };
+const DAY_LABELS = { monday:'Mon', tuesday:'Tue', wednesday:'Wed', thursday:'Thu', friday:'Fri', saturday:'Sat', sunday:'Sun' };
+
+// ==================== PROGRAM SELECTOR ====================
+function getActiveProgram() {
+  const data = getData();
+  return data.settings.activeProgram || autoDetectProgram();
+}
+
+function autoDetectProgram() {
+  const month = new Date().getMonth(); // 0-based
+  // March(2)->month1, April(3)->month2, May(4)->month3, then cycle
+  const cycle = ((month - 2) % 3 + 3) % 3; // normalize to 0,1,2
+  return ['month1','month2','month3'][cycle];
+}
+
+function switchProgram(key) {
+  const data = getData();
+  data.settings.activeProgram = key;
+  saveData(data);
+  PROGRAM = PROGRAMS[key].program;
+  renderDashboard();
+}
+
+function initProgramSelector() {
+  const select = document.getElementById('programSelect');
+  const activeKey = getActiveProgram();
+  select.innerHTML = Object.entries(PROGRAMS).map(([key, val]) =>
+    `<option value="${key}" ${key === activeKey ? 'selected' : ''}>${val.label}</option>`
+  ).join('');
+  PROGRAM = PROGRAMS[activeKey].program;
+}
 
 // ==================== DATA LAYER ====================
 function getData() {
@@ -684,12 +1061,21 @@ function showToast(msg) {
 
 // ==================== DASHBOARD ====================
 function renderDashboard() {
+  initProgramSelector();
   const today = new Date();
   const dayName = DAY_NAMES[today.getDay()];
   const todayDiv = document.getElementById('dashboard-today');
   const program = PROGRAM[dayName];
 
   if (program) {
+    const strengthExercises = program.exercises.filter(e => e.type === 'strength');
+    const isYoga = program.exercises.some(e => e.type === 'yoga');
+    let exercisePreview = '';
+    if (isYoga) {
+      exercisePreview = program.label;
+    } else {
+      exercisePreview = strengthExercises.map(e => `${e.name} (${e.sets}x${e.reps})`).join(' &bull; ');
+    }
     todayDiv.innerHTML = `
       <div class="flex-between mb-8">
         <div>
@@ -698,7 +1084,7 @@ function renderDashboard() {
         </div>
       </div>
       <div style="font-size:13px;color:var(--text2);margin-bottom:12px;">
-        ${program.exercises.filter(e=>e.type==='strength').map(e=>`${e.name} (${e.sets}x${e.reps})`).join(' &bull; ')}
+        ${exercisePreview}
       </div>
       <button class="btn" onclick="showPage('log')">Start Workout</button>
     `;
@@ -734,9 +1120,18 @@ function renderStreakDots() {
     let cls = 'streak-dot';
     if (hasWorkout) cls += ' completed';
     if (isToday) cls += ' today';
-    html += `<div class="${cls}">${weekDays[i]}</div>`;
+    const dayNames = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+    const dn = dayNames[i];
+    html += `<div class="${cls}" style="cursor:pointer;" onclick="goToLog('${dateStr}','${dn}')">${weekDays[i]}</div>`;
   }
   dotsDiv.innerHTML = html;
+}
+
+function goToLog(dateStr, dayName) {
+  showPage('log');
+  document.getElementById('logDate').value = dateStr;
+  document.getElementById('logDayType').value = dayName;
+  renderExerciseInputs(dayName);
 }
 
 function renderDashboardPRs() {
@@ -791,7 +1186,7 @@ function initLogPage(editId) {
       document.getElementById('logHipPain').value = w.hipPain || 0;
       document.getElementById('hipPainVal').textContent = w.hipPain || 0;
       document.getElementById('logNotes').value = w.notes || '';
-      renderExerciseInputs(w.dayType, w.exercises);
+      renderExerciseInputs(w.dayType, w.exercises, w.warmupDone);
       return;
     }
   }
@@ -808,16 +1203,30 @@ function initLogPage(editId) {
   daySelect.onchange = () => renderExerciseInputs(daySelect.value);
 }
 
-function renderExerciseInputs(dayType, savedExercises) {
+function isYogaDay(dayType) {
+  const program = PROGRAM[dayType];
+  return program && program.exercises.length > 0 && program.exercises.every(e => e.type === 'yoga');
+}
+
+function renderExerciseInputs(dayType, savedExercises, savedWarmup) {
   const program = PROGRAM[dayType];
   if (!program) return;
   const container = document.getElementById('logExercises');
 
-  if (dayType === 'wednesday') {
+  // Yoga / Yoga Nidra days
+  if (isYogaDay(dayType)) {
+    const isNidra = dayType === 'sunday';
+    const label = isNidra ? 'Yoga Nidra' : 'Yoga Session';
+    const color = isNidra ? 'var(--nidra)' : 'var(--yoga-fri)';
     container.innerHTML = `
       <div class="card">
-        <h3 style="color:var(--yoga);">Yoga Session</h3>
-        <p style="font-size:13px;color:var(--text2);">Log attendance and add any notes below.</p>
+        <h3 style="color:${color};">${label}</h3>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Log attendance and add any notes below.</p>
+        ${isNidra ? `
+        <div class="form-group">
+          <label>Duration (minutes)</label>
+          <input type="number" id="logNidraDuration" placeholder="e.g. 30" value="${savedExercises?.[0]?.sets?.[0]?.duration || ''}" inputmode="numeric">
+        </div>` : ''}
       </div>
     `;
     return;
@@ -829,39 +1238,87 @@ function renderExerciseInputs(dayType, savedExercises) {
     .sort((a,b) => b.date.localeCompare(a.date))[0];
 
   let html = '';
-  program.exercises.forEach((ex, exIdx) => {
+
+  // Warm-up section (collapsible checkboxes)
+  const warmupExercises = program.exercises.filter(e => e.type === 'warmup');
+  if (warmupExercises.length > 0) {
+    html += `<div class="warmup-section">
+      <div class="warmup-toggle" onclick="toggleWarmup()">
+        <h3>Warm-Up</h3>
+        <span class="toggle-icon" id="warmupToggleIcon">&#9660;</span>
+      </div>
+      <div class="warmup-items collapsed" id="warmupItems">`;
+    warmupExercises.forEach((ex, i) => {
+      const checked = savedWarmup ? savedWarmup[i] : false;
+      html += `<div class="warmup-item">
+        <input type="checkbox" id="warmup-${i}" ${checked ? 'checked' : ''}>
+        <div>
+          <label for="warmup-${i}">${ex.name}</label>
+          <div class="warmup-detail">${ex.sets}x${ex.reps}</div>
+        </div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  // Non-warmup exercises
+  const mainExercises = program.exercises.filter(e => e.type !== 'warmup');
+  mainExercises.forEach((ex, exIdx) => {
     const saved = savedExercises?.find(s => s.name === ex.name);
     const last = lastWorkout?.exercises?.find(e => e.name === ex.name);
     const numSets = saved ? saved.sets.length : ex.sets;
 
     const isBalance = ex.type === 'balance';
+    const isMobility = ex.type === 'mobility';
 
-    html += `<div class="exercise-card" data-exercise="${ex.name}">
+    html += `<div class="exercise-card" data-exercise="${ex.name}" data-type="${ex.type}">
       <div class="ex-header">
         <div>
           <div class="ex-name">${ex.name}</div>
-          <div class="ex-target">${ex.sets} x ${ex.reps}${isBalance ? ' (balance)' : ''}</div>
+          <div class="ex-target">${ex.sets} x ${ex.reps}${isBalance ? ' (balance)' : ''}${isMobility ? ' (mobility)' : ''}</div>
         </div>
-        ${last ? `<span style="font-size:11px;color:var(--text2);">Last: ${last.sets.filter(s=>s.weight>0).map(s=>s.weight+'x'+s.reps).join(', ') || 'logged'}</span>` : ''}
+        ${last && !isMobility ? `<span style="font-size:11px;color:var(--text2);">Last: ${last.sets.filter(s=>s.weight>0||s.reps).map(s=> s.weight > 0 ? s.weight+'x'+s.reps : s.reps).join(', ') || 'logged'}</span>` : ''}
       </div>
       <div class="sets-container" id="sets-${exIdx}">`;
 
     for (let s = 0; s < numSets; s++) {
       const w = saved ? saved.sets[s]?.weight || '' : '';
       const r = saved ? saved.sets[s]?.reps || '' : '';
-      html += setRowHTML(exIdx, s, w, r, isBalance);
+      html += setRowHTML(exIdx, s, w, r, isBalance || isMobility);
     }
 
     html += `</div>
-      ${!isBalance ? `<button class="add-set-btn" onclick="addSet(${exIdx})">+ Add Set</button>` : ''}
+      ${!isBalance && !isMobility ? `<button class="add-set-btn" onclick="addSet(${exIdx})">+ Add Set</button>` : ''}
     </div>`;
   });
+
+  // Mobility section label
+  const mobilityExercises = program.exercises.filter(e => e.type === 'mobility');
+  if (mobilityExercises.length > 0) {
+    // Insert a header before mobility exercises in the HTML
+    const firstMobilityName = mobilityExercises[0].name;
+    const mobilityHeaderHtml = `<div style="margin-top:8px;margin-bottom:4px;"><h3 style="color:var(--green);">Hip Mobility Finisher</h3></div>`;
+    const idx = html.indexOf(`data-exercise="${firstMobilityName}"`);
+    if (idx !== -1) {
+      const divIdx = html.lastIndexOf('<div class="exercise-card"', idx);
+      if (divIdx !== -1) {
+        html = html.slice(0, divIdx) + mobilityHeaderHtml + html.slice(divIdx);
+      }
+    }
+  }
 
   container.innerHTML = html;
 }
 
-function setRowHTML(exIdx, setIdx, weight, reps, isBalance) {
-  if (isBalance) {
+function toggleWarmup() {
+  const items = document.getElementById('warmupItems');
+  const icon = document.getElementById('warmupToggleIcon');
+  items.classList.toggle('collapsed');
+  icon.classList.toggle('open');
+}
+
+function setRowHTML(exIdx, setIdx, weight, reps, isDurationOnly) {
+  if (isDurationOnly) {
     return `<div class="set-row">
       <span class="set-num">Set ${setIdx+1}</span>
       <input type="text" placeholder="Duration/reps" value="${reps}" data-ex="${exIdx}" data-set="${setIdx}" data-field="reps">
@@ -906,9 +1363,30 @@ function saveWorkout() {
 
   const program = PROGRAM[dayType];
   const exercises = [];
+  let warmupDone = null;
 
-  if (dayType !== 'wednesday') {
-    program.exercises.forEach((ex, exIdx) => {
+  if (isYogaDay(dayType)) {
+    const isNidra = dayType === 'sunday';
+    const entry = { name: isNidra ? 'Yoga Nidra' : 'Yoga Class', sets:[{ weight:0, reps:1 }] };
+    if (isNidra) {
+      const dur = document.getElementById('logNidraDuration');
+      if (dur) entry.sets[0].duration = parseInt(dur.value) || 0;
+    }
+    exercises.push(entry);
+  } else {
+    // Collect warmup checkboxes
+    const warmupExercises = program.exercises.filter(e => e.type === 'warmup');
+    if (warmupExercises.length > 0) {
+      warmupDone = [];
+      warmupExercises.forEach((ex, i) => {
+        const cb = document.getElementById('warmup-' + i);
+        warmupDone.push(cb ? cb.checked : false);
+      });
+    }
+
+    // Collect main exercise data
+    const mainExercises = program.exercises.filter(e => e.type !== 'warmup');
+    mainExercises.forEach((ex, exIdx) => {
       const setsContainer = document.getElementById('sets-' + exIdx);
       if (!setsContainer) return;
       const rows = setsContainer.querySelectorAll('.set-row');
@@ -922,16 +1400,17 @@ function saveWorkout() {
       });
       exercises.push({ name: ex.name, sets });
     });
-  } else {
-    exercises.push({ name:'Yoga Class', sets:[{ weight:0, reps:1 }] });
   }
 
   const data = getData();
 
+  const workoutEntry = { date, dayType, exercises, hipPain, notes, bodyweight };
+  if (warmupDone) workoutEntry.warmupDone = warmupDone;
+
   if (logEditingId) {
     const idx = data.workouts.findIndex(w => w.id === logEditingId);
     if (idx !== -1) {
-      data.workouts[idx] = { ...data.workouts[idx], date, dayType, exercises, hipPain, notes, bodyweight };
+      data.workouts[idx] = { ...data.workouts[idx], ...workoutEntry };
     }
     logEditingId = null;
     showToast('Workout updated!');
@@ -939,9 +1418,9 @@ function saveWorkout() {
     const existing = data.workouts.findIndex(w => w.date === date && w.dayType === dayType);
     if (existing !== -1) {
       if (!confirm('A workout already exists for this date and day type. Overwrite it?')) return;
-      data.workouts[existing] = { id:data.workouts[existing].id, date, dayType, exercises, hipPain, notes, bodyweight };
+      data.workouts[existing] = { id:data.workouts[existing].id, ...workoutEntry };
     } else {
-      data.workouts.push({ id:generateId(), date, dayType, exercises, hipPain, notes, bodyweight });
+      data.workouts.push({ id:generateId(), ...workoutEntry });
     }
     showToast('Workout saved!');
   }
@@ -959,14 +1438,21 @@ let progressChart = null;
 let bwChart = null;
 let chartMode = 'weight';
 
-function initChartsPage() {
-  const select = document.getElementById('chartExercise');
+function getAllStrengthExercises() {
   const allExercises = new Set();
-  Object.values(PROGRAM).forEach(day => {
-    day.exercises.forEach(ex => {
-      if (ex.type === 'strength') allExercises.add(ex.name);
+  Object.values(PROGRAMS).forEach(month => {
+    Object.values(month.program).forEach(day => {
+      day.exercises.forEach(ex => {
+        if (ex.type === 'strength') allExercises.add(ex.name);
+      });
     });
   });
+  return allExercises;
+}
+
+function initChartsPage() {
+  const select = document.getElementById('chartExercise');
+  const allExercises = getAllStrengthExercises();
 
   select.innerHTML = '';
   KEY_LIFTS.forEach(name => {
@@ -1195,11 +1681,19 @@ function viewSession(dateStr) {
 
     if (w.bodyweight) html += `<p style="font-size:13px;color:var(--text2);margin-bottom:8px;">Bodyweight: ${w.bodyweight} lbs</p>`;
 
+    // Show warmup completion
+    if (w.warmupDone) {
+      const completed = w.warmupDone.filter(Boolean).length;
+      const total = w.warmupDone.length;
+      html += `<p style="font-size:13px;color:var(--text2);margin-bottom:8px;">Warm-up: ${completed}/${total} completed</p>`;
+    }
+
     w.exercises.forEach(ex => {
       const validSets = ex.sets.filter(s => s.weight > 0 || s.reps);
-      if (validSets.length === 0 && ex.name !== 'Yoga Class') return;
+      if (validSets.length === 0 && ex.name !== 'Yoga Class' && ex.name !== 'Yoga Nidra') return;
       html += `<div style="margin-bottom:10px;">
         <div style="font-weight:600;font-size:14px;">${ex.name}</div>
+        ${ex.name === 'Yoga Nidra' && ex.sets[0]?.duration ? `<div style="font-size:13px;color:var(--text2);">Duration: ${ex.sets[0].duration} min</div>` : ''}
         ${validSets.map((s,i) => `<div style="font-size:13px;color:var(--text2);padding:2px 0;">Set ${i+1}: ${s.weight > 0 ? s.weight + ' lbs x ' : ''}${s.reps}${typeof s.reps === 'number' && s.weight > 0 ? ' reps' : ''}</div>`).join('')}
       </div>`;
     });
@@ -1349,7 +1843,10 @@ function renderHipChart() {
         tension: 0.3,
         pointRadius: 5,
         pointBackgroundColor: points.map(p => {
-          const colors = { monday:'#6c5ce7', tuesday:'#00cec9', wednesday:'#fdcb6e', thursday:'#74b9ff', friday:'#ff6b6b' };
+          const colors = {
+            monday:'#6c5ce7', tuesday:'#00cec9', wednesday:'#fdcb6e',
+            thursday:'#74b9ff', friday:'#fdcb6e', saturday:'#ff6b6b', sunday:'#55efc4'
+          };
           return colors[p.dayType] || '#ff6b6b';
         }),
       }]
@@ -1417,6 +1914,7 @@ if ('serviceWorker' in navigator) {
 
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', () => {
+  initProgramSelector();
   renderDashboard();
 });
 
