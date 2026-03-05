@@ -206,8 +206,10 @@ h3 { font-size:15px; margin-bottom:8px; font-weight:600; color:var(--text2); }
   font-size:10px; font-weight:600;
   border: 2px solid var(--border);
   color: var(--text2);
+  background: none;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  padding: 0;
 }
 .streak-dot.completed { border-color: var(--green); color: var(--green); background: rgba(0,206,201,.1); }
 .streak-dot.today { border-color: var(--accent2); color: var(--accent2); }
@@ -1124,9 +1126,14 @@ function renderStreakDots() {
     if (isToday) cls += ' today';
     const dayNames = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
     const dn = dayNames[i];
-    html += `<div class="${cls}" style="cursor:pointer;" onclick="goToLog('${dateStr}','${dn}')">${weekDays[i]}</div>`;
+    html += `<button type="button" class="${cls}" data-date="${dateStr}" data-day="${dn}">${weekDays[i]}</button>`;
   }
   dotsDiv.innerHTML = html;
+  dotsDiv.querySelectorAll('.streak-dot').forEach(dot => {
+    dot.addEventListener('click', function() {
+      goToLog(this.dataset.date, this.dataset.day);
+    });
+  });
 }
 
 function goToLog(dateStr, dayName) {
