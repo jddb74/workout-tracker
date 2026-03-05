@@ -1247,9 +1247,11 @@ function renderExerciseInputs(dayType, savedExercises, savedWarmup) {
   }
 
   const data = getData();
-  const lastWorkout = data.workouts
-    .filter(w => w.dayType === dayType && (!logEditingId || w.id !== logEditingId))
-    .sort((a,b) => b.date.localeCompare(a.date))[0];
+  // Search all workouts for "Last:" display (not just same dayType)
+  // so old data from schedule changes still shows up
+  const allSortedWorkouts = data.workouts
+    .filter(w => !logEditingId || w.id !== logEditingId)
+    .sort((a,b) => b.date.localeCompare(a.date));
 
   let html = '';
 
@@ -1279,7 +1281,8 @@ function renderExerciseInputs(dayType, savedExercises, savedWarmup) {
   const mainExercises = program.exercises.filter(e => e.type !== 'warmup');
   mainExercises.forEach((ex, exIdx) => {
     const saved = savedExercises?.find(s => s.name === ex.name);
-    const last = lastWorkout?.exercises?.find(e => e.name === ex.name);
+    const lastW = allSortedWorkouts.find(w => w.exercises?.some(e => e.name === ex.name));
+    const last = lastW?.exercises?.find(e => e.name === ex.name);
     const numSets = saved ? saved.sets.length : ex.sets;
 
     const isBalance = ex.type === 'balance';
