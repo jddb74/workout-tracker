@@ -200,12 +200,14 @@ h3 { font-size:15px; margin-bottom:8px; font-weight:600; color:var(--text2); }
   display:flex; gap:6px; flex-wrap:wrap;
 }
 .streak-dot {
-  width:36px; height:36px;
+  width:42px; height:42px;
   border-radius:50%;
   display:flex; align-items:center; justify-content:center;
   font-size:10px; font-weight:600;
   border: 2px solid var(--border);
   color: var(--text2);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 .streak-dot.completed { border-color: var(--green); color: var(--green); background: rgba(0,206,201,.1); }
 .streak-dot.today { border-color: var(--accent2); color: var(--accent2); }
