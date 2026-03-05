@@ -1926,7 +1926,13 @@ function formatDateDisplay(dateStr) {
 
 // ==================== PWA SERVICE WORKER ====================
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  // Nuke old caches and force update
+  caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(r => r.unregister());
+  }).then(() => {
+    navigator.serviceWorker.register('sw.js?v=3').catch(() => {});
+  });
 }
 
 // ==================== INIT ====================
