@@ -1130,10 +1130,22 @@ function renderStreakDots() {
 }
 
 function goToLog(dateStr, dayName) {
-  showPage('log');
+  currentPage = 'log';
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-log').classList.add('active');
+  document.getElementById('nav-log').classList.add('active');
+  window.scrollTo(0, 0);
+
+  logEditingId = null;
   document.getElementById('logDate').value = dateStr;
   document.getElementById('logDayType').value = dayName;
+  document.getElementById('logBodyweight').value = '';
+  document.getElementById('logHipPain').value = 0;
+  document.getElementById('hipPainVal').textContent = '0';
+  document.getElementById('logNotes').value = '';
   renderExerciseInputs(dayName);
+  document.getElementById('logDayType').onchange = () => renderExerciseInputs(document.getElementById('logDayType').value);
 }
 
 function renderDashboardPRs() {
