@@ -476,7 +476,27 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
       item('pr-wiso', 'Wrist isometrics', '2×30s')
     ]}] : [];
   }
+  var DAILY_START = '2026-10-12';
+  function dailyItems() {
+    return [
+      item('d15-hip', '90/90 wall breathing + half-kneeling hip flexor w/ glute squeeze', '5 breaths · 45s/side'),
+      item('d15-walk', 'Banded lateral walk', '12 steps each way'),
+      item('d15-sler', 'Side-lying external rotation', '12/side · 2–5 lb'),
+      item('d15-wsr', 'Wall slide with foam roller', '10'),
+      item('d15-wext', 'Slow wrist-extension eccentric', '12 · 2–3 lb'),
+      item('d15-bug', 'Dead bug', '8/side'),
+      item('d15-bal', 'Single-leg balance', '30s/side · eyes closed last 10s')
+    ];
+  }
   function getPlan(iso) {
+    var plan = basePlan(iso);
+    if (iso >= DAILY_START) {
+      plan.sections = [{ title: 'Daily 15 — Bad day? These 7 alone are a win. (progress every 2 weeks)', items: dailyItems() }].concat(plan.sections);
+      plan.rest = false;
+    }
+    return plan;
+  }
+  function basePlan(iso) {
     var key = dayKeyET(iso);
     var base = {
       key: key,
@@ -533,6 +553,10 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
           item('acc-mcgill', 'McGill curl-up', '3×8')
         ]}
       ];
+      if (iso >= DAILY_START) base.sections.push({ title: 'Arms (light)', items: [
+        item('arm-push', 'V-bar cable pushdown (wrist straight)', '3×12 · light · stop >3/10 wrist/shoulder', 'strength'),
+        item('arm-curl', 'Neutral-grip DB hammer curl (wrist straight)', '3×12 · light · stop >3/10 wrist/shoulder', 'strength')
+      ]});
       return base;
     }
     if (key === 'wednesday') {
@@ -543,7 +567,7 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
           item('press-ohp', 'OH press', '5×5 · normal or neutral', 'strength'),
           item('pull-neutral', 'Neutral pull-ups / lat pulldown', '5×5 · straps', 'strength'),
           item('hip-thrust', 'Barbell hip thrust', '5×5', 'strength')
-        ]}
+        ].concat(iso >= DAILY_START ? [item('stepup', 'Step-up (knee-height box, pain-free hip)', '3×8/leg', 'strength')] : [])}
       ]);
       if (iso >= CHEST_WED_START) {
         var chestPaused = iso >= '2026-10-08' && iso < '2026-10-26';
@@ -578,6 +602,10 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
           item('thu-couch', 'Couch stretch', '2×45s/side')
         ]}
       ];
+      if (iso >= DAILY_START) base.sections.push({ title: 'Arms (light)', items: [
+        item('arm-push', 'V-bar cable pushdown (wrist straight)', '3×12 · light · stop >3/10 wrist/shoulder', 'strength'),
+        item('arm-curl', 'Neutral-grip DB hammer curl (wrist straight)', '3×12 · light · stop >3/10 wrist/shoulder', 'strength')
+      ]});
       return base;
     }
     if (key === 'friday') {
@@ -933,7 +961,7 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
     html += '<li><strong>Pain</strong>Pain ≤3/10 is OK if it is settled/normal by morning. Otherwise stop or regress.</li>';
     html += '<li><strong>Wrist</strong>Keep wrist straight. Brace + straps on pulls. No bent-back wrist under load.</li>';
     html += '<li><strong>No pressing patterns</strong>No flat or incline bench, dips, or push-ups.</li>';
-    html += '<li><strong>No forearm loading</strong>No loaded twisting, skullcrushers, or pinch grips. No wrist curls under load beyond 2–3 lb eccentrics (PT block from Oct 13).</li>';
+    html += '<li><strong>No forearm loading</strong>No loaded twisting, skullcrushers, straight-bar curls, or pinch grips. Arms (Tue/Thu from Oct 13): V-bar pushdown + neutral hammer curl only, light, wrist straight. No wrist curls under load beyond 2–3 lb eccentrics (PT block from Oct 13).</li>';
     html += '<li><strong>Wrist puffier next morning</strong>Drop wrist extension/flexion eccentrics and radial/ulnar deviation for that week.</li>';
     html += '<li><strong>No deep hip openers</strong>No pigeon, frog, or deep 90/90.</li>';
     html += '<li><strong>Krav Maga</strong>Off until week of Oct 26 retest.</li>';
@@ -1043,6 +1071,18 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
     if (has('2026-10-18', /Grip squeeze/) === false) errors.push('new PT missing Sun Oct 18');
     if (has('2026-10-13', /Rotation isometrics|Prone Y|Serratus/)) errors.push('old PT still on Oct 13');
     if (has('2026-10-14', /Wall slides/) === false) errors.push('primer missing Wed Oct 14');
+    if (has('2026-10-11', /Dead bug/) && namesOn('2026-10-11').filter(function(n){return /Single-leg balance/.test(n);}).length) errors.push('daily15 before Oct 12');
+    ['2026-10-12','2026-10-13','2026-10-14','2026-10-15','2026-10-16','2026-10-17','2026-10-18'].forEach(function (d) {
+      if (!has(d, /Single-leg balance/)) errors.push('daily15 missing ' + d);
+      if (getPlan(d).sections[0].items[0].id !== 'd15-hip') errors.push('daily15 not top ' + d);
+    });
+    if (!has('2026-10-14', /Step-up/)) errors.push('step-up missing Wed');
+    if (has('2026-10-07', /Step-up/)) errors.push('step-up before start');
+    if (!has('2026-10-13', /pushdown/) || !has('2026-10-15', /hammer curl/)) errors.push('arms missing Tue/Thu');
+    if (has('2026-10-14', /pushdown|hammer curl/)) errors.push('arms on Wed');
+    ['2026-10-12','2026-10-13','2026-10-14','2026-10-15','2026-10-16','2026-10-18'].forEach(function (d) {
+      if (has(d, /skullcrusher|straight-bar curl|russian twist|wood ?chop/i)) errors.push('guardrail violation ' + d);
+    });
     return errors;
   }
 
