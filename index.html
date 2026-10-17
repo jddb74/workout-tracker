@@ -301,6 +301,7 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
   pointer-events: none;
 }
 .toast.show { opacity: 1; }
+.min-tag{display:inline-block;background:#fdcb6e;color:#1a1a1a;font-size:11px;font-weight:700;padding:1px 6px;border-radius:6px;margin-right:4px;vertical-align:middle}
 </style>
 </head>
 <body>
@@ -488,10 +489,102 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
       item('d15-bal', 'Single-leg balance', '30s/side · eyes closed last 10s')
     ];
   }
+  // ===== Program v2 (from Mon Oct 19, 2026) =====
+  var V2_START = '2026-10-19';
+  function mitem(id, name, detail, kind) { var it = item(id, name, detail, kind); it.min = true; return it; }
+  function v2Week(iso) { return Math.floor((parseISO(iso) - parseISO(V2_START)) / (7 * 864e5)) + 1; }
+  function v2Deload(iso) { return v2Week(iso) % 5 === 0; }
+  function v2Primer() {
+    return { title: 'Primer (5 min)', items: [
+      item('v2-pr-er', 'Band external rotation', '1×15/side'),
+      item('v2-pr-ws', 'Foam-roller wall slide', '×10'),
+      item('v2-pr-wext', 'Wrist-extension eccentric', '×12 · 2–3 lb'),
+      item('v2-pr-wiso', 'Wrist isometric hold', '1×30s · then 1–2 ramp-up sets')
+    ]};
+  }
+  var V2_MIN_NOTE = 'MINIMUM VERSION (20–25 min): Primer + the moves tagged MIN, 2 sets each. That counts as a win.';
+  var V2_LIFT_NOTE = 'Double progression: same weight all sets; hit top of range on all sets (RIR ≥1, pain ≤3/10) → +5 lb lower / +2.5 lb upper. RIR 1–3. Brace on, wrist straight, straps on pulls.';
+  var V2_SUGGEST = {
+    'v2-dl-trap': '185 lb', 'v2-ohp': '100 lb', 'v2-hip-thrust': '255 lb',
+    'v2-sq-box': '115 lb', 'v2-row-cable': '105 lb', 'v2-lm': '30 lb', 'v2-sldl': '25–35 lb DB'
+  };
+  Object.keys(V2_SUGGEST).forEach(function (k) { SUGGEST[k] = V2_SUGGEST[k]; });
+  function v2Fast(iso, key) {
+    var wk = v2Week(iso);
+    if (key === 'sunday' && wk >= 2) return 'Fasting: 16:8, plus your one 24-hour fast this week (Wed, Sat, or Sun; never a lifting day). Hit full protein the day before and after.';
+    if ((key === 'wednesday' || key === 'saturday') && wk >= 2) return 'Fasting: 16:8. This is a 24-hour fast option (once a week; Wed, Sat, or Sun). Full protein before and after.';
+    return 'Fasting: 16:8, window opens after training. Protein 180–195 g, ~2,300–2,500 kcal.';
+  }
+  function v2Plan(iso) {
+    var key = dayKeyET(iso);
+    var wk = v2Week(iso), dl = v2Deload(iso);
+    var titles = { monday: 'Lower A', tuesday: 'Upper A', wednesday: 'Rehab + Swim', thursday: 'Lower B', friday: 'Upper B', saturday: 'Rehab + Swim', sunday: 'Off' };
+    var base = { key: key, title: titles[key], subtitle: '', rest: false, note: '', sections: [] };
+    var dlTag = dl ? ' DELOAD WEEK: 2 sets, ~10% lighter, RIR 4.' : '';
+    var lift = function (secItems) {
+      base.note = V2_MIN_NOTE + dlTag + ' ' + V2_LIFT_NOTE + ' ' + v2Fast(iso, key);
+      base.sections = [v2Primer(), { title: 'Workout (MIN = minimum version)', items: secItems }];
+    };
+    if (key === 'monday') lift([
+      mitem('v2-dl-trap', 'Trap bar deadlift, high handles, straps', '4×6–8 · main lift · RIR 2–3', 'strength'),
+      mitem('v2-rfess', 'Rear-foot-elevated split squat, DBs, straps', '3×8–10/leg · pain-free depth', 'strength'),
+      item('v2-hip-thrust', 'Barbell hip thrust', '3×10–12', 'strength'),
+      item('v2-legcurl', 'Seated leg curl', '3×10–12', 'strength'),
+      item('v2-calf', 'Standing calf raise', '3×12–15 · pause bottom', 'strength'),
+      mitem('v2-core-a', 'Dead bug or Pallof press', '2×8/side', 'strength')
+    ]);
+    else if (key === 'tuesday') {
+      lift([
+        mitem('v2-ohp', 'Overhead press', '4×6–8 · main lift · stop >3/10', 'strength'),
+        mitem('v2-pulldown', 'Neutral-grip lat pulldown, straps', '3×8–12', 'strength'),
+        item('v2-row-cable', 'Seated cable row, neutral, straps', '3×10–12', 'strength'),
+        item('v2-latraise', 'Cable lateral raise', '3×12–15 · light', 'strength'),
+        item('v2-face', 'Face pull (rope)', '2×15', 'strength'),
+        mitem('v2-pushdown', 'V-bar cable pushdown, wrist straight', '3×10–12', 'strength'),
+        item('v2-hammer', 'Neutral DB hammer curl, no twisting', '3×10–12', 'strength')
+      ]);
+      if (iso === '2026-10-27') base.sections.push({ title: 'Chest retest (light)', items: [
+        item('v2-chest-retest', 'HS chest press or neutral DB floor press', '2×12 light · ≤3/10 and fine next morning → add 2×10–12 Tue/Fri', 'strength')
+      ]});
+    }
+    else if (key === 'thursday') lift([
+      mitem('v2-legpress', 'Leg press, hips on pad', '4×8–10 · main lift · pain-free depth', 'strength'),
+      item('v2-sq-box', 'High box squat or belt squat', '3×8–10', 'strength'),
+      mitem('v2-sldl', 'Single-leg RDL, straps, hand support OK', '3×8–10/leg', 'strength'),
+      item('v2-stepup', 'Step-up, knee-height box', '2×10/leg', 'strength'),
+      item('v2-legext', 'Leg extension', '2×12–15', 'strength'),
+      mitem('v2-sideplank', 'Forearm side plank', '2×30s/side')
+    ]);
+    else if (key === 'friday') lift([
+      mitem('v2-lm', 'Half-kneeling landmine press', '4×8–10 · main lift', 'strength'),
+      mitem('v2-row-hs', 'Hammer Strength row, neutral, straps', '3×8–12', 'strength'),
+      item('v2-pullup', 'Neutral pull-up (assisted OK) or pulldown', '3×6–10', 'strength'),
+      item('v2-revpec', 'Reverse pec deck', '3×12–15', 'strength'),
+      item('v2-shrug', 'DB shrug, straps, no roll', '2×12', 'strength'),
+      item('v2-ohext', 'Overhead rope extension', '3×10–12 · stop if shoulder >3/10', 'strength'),
+      mitem('v2-cablecurl', 'Cable curl, rope', '3×10–12', 'strength')
+    ]);
+    else if (key === 'wednesday' || key === 'saturday') {
+      base.note = 'Fine-tuned rehab day. MINIMUM VERSION: Daily 15 + easy swim. ' + PT_NOTE + ' ' + v2Fast(iso, key);
+      base.sections = [
+        { title: 'Swim (MIN)', items: [mitem('v2-swim', 'Easy swim', '20–30 min · kickboard + fins, relaxed freestyle · NO breaststroke kick')] },
+        { title: 'PT block — shoulder, wrist, hip', items: ptItems(iso) },
+        { title: 'Krav Maga (optional, 1–2×/week, evening)', items: [
+          item('v2-krav', 'Krav Maga — LIGHT only', 'Drills, footwork, technique. NO punching or pad work. Stop >3/10')
+        ]}
+      ];
+    }
+    else {
+      base.subtitle = 'Off, or an easy walk. Daily 15 optional. ' + v2Fast(iso, key);
+      base.note = base.subtitle;
+      base.sections = [{ title: 'Optional', items: [item('v2-walk', 'Easy walk', '20–40 min, optional')] }];
+    }
+    return base;
+  }
   function getPlan(iso) {
-    var plan = basePlan(iso);
+    var plan = iso >= V2_START ? v2Plan(iso) : basePlan(iso);
     if (iso >= DAILY_START) {
-      plan.sections = [{ title: 'Daily 15 — Bad day? These 7 alone are a win. (progress every 2 weeks)', items: dailyItems() }].concat(plan.sections);
+      plan.sections = [{ title: (iso >= V2_START ? 'Daily 15 (MIN on rehab days; lifting days: primer covers shoulder/wrist)' : 'Daily 15 — Bad day? These 7 alone are a win. (progress every 2 weeks)'), items: dailyItems() }].concat(plan.sections);
       plan.rest = false;
     }
     return plan;
@@ -734,7 +827,7 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
     html += '</div><div class="save-state" id="save-state">' + (hasLog(rec) ? 'Saved' : '') + '</div></div>';
     html += '<div style="margin:10px 0 4px">';
     html += '<span class="day-badge day-' + plan.key + '">' + esc(plan.title) + '</span>';
-    if (selected >= PROGRAM_START) html += '<span class="day-badge day-saturday">Week ' + weekNumber(selected) + '</span>';
+    if (selected >= PROGRAM_START) html += '<span class="day-badge day-saturday">' + (selected >= V2_START ? 'v2 Week ' + v2Week(selected) : 'Week ' + weekNumber(selected)) + '</span>';
     html += '</div>';
     if (plan.subtitle) html += '<p class="sub">' + esc(plan.subtitle) + '</p>';
     html += '<div class="guardrail-banner">Pain ≤3/10 OK if settled by morning · straps, wrist straight · see Guards tab</div>';
@@ -758,7 +851,7 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
         html += '<div class="' + cls + '" data-row="' + esc(it.id) + '">';
         html += '<div class="ex-header">';
         html += '<input type="checkbox" data-id="' + esc(it.id) + '" data-field="done"' + (saved.done ? ' checked' : '') + ' aria-label="' + esc(it.name) + '">';
-        html += '<div><div class="ex-name">' + esc(it.name) + '</div>';
+        html += '<div><div class="ex-name">' + (it.min ? '<span class="min-tag">MIN</span> ' : '') + esc(it.name) + '</div>';
         html += '<div class="ex-target">' + esc(it.detail) + '</div>';
         if (SUGGEST[it.id]) html += '<div class="suggest">Suggested: ' + esc(SUGGEST[it.id]) + '</div>';
         html += '</div></div>';
@@ -882,7 +975,7 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
     var first = new Date(calYear, calMonth, 1);
     var startPad = (first.getDay() + 6) % 7;
     var lastDate = new Date(calYear, calMonth + 1, 0).getDate();
-    var html = '<h1>Calendar</h1><p class="sub">Tap a day. Chest is on Wednesday from Oct 6.</p>';
+    var html = '<h1>Calendar</h1><p class="sub">Tap a day. From Oct 19: Mon Lower A · Tue Upper A · Wed Rehab+Swim · Thu Lower B · Fri Upper B · Sat Rehab+Swim · Sun Off.</p>';
     html += '<div class="week-nav"><button type="button" id="cal-prev" aria-label="Previous month">‹</button>';
     html += '<div class="week-label">' + esc(label) + '</div>';
     html += '<button type="button" id="cal-next" aria-label="Next month">›</button></div>';
@@ -1083,6 +1176,10 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
     ['2026-10-12','2026-10-13','2026-10-14','2026-10-15','2026-10-16','2026-10-18'].forEach(function (d) {
       if (has(d, /skullcrusher|straight-bar curl|russian twist|wood ?chop/i)) errors.push('guardrail violation ' + d);
     });
+    var exp = {'2026-10-19':'Lower A','2026-10-20':'Upper A','2026-10-21':'Rehab + Swim','2026-10-22':'Lower B','2026-10-23':'Upper B','2026-10-24':'Rehab + Swim','2026-10-25':'Off'};
+    Object.keys(exp).forEach(function (d) { if (getPlan(d).title !== exp[d]) errors.push('v2 title ' + d); });
+    if (getPlan('2026-10-18').title === 'Off') errors.push('v2 leaked before Oct 19');
+    if (has('2026-10-19', /punch/i) && !has('2026-10-21', /Krav/)) errors.push('krav');
     return errors;
   }
 
