@@ -302,6 +302,13 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
 }
 .toast.show { opacity: 1; }
 .min-tag{display:inline-block;background:#fdcb6e;color:#1a1a1a;font-size:11px;font-weight:700;padding:1px 6px;border-radius:6px;margin-right:4px;vertical-align:middle}
+.sets-grid{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.pset{display:flex;align-items:center;gap:8px}
+.pset-n{width:22px;color:var(--muted,#999);font-weight:700;text-align:center}
+.pset-x{color:var(--muted,#999)}
+.pset input{flex:1;min-width:0;min-height:48px;font-size:18px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px;color:var(--text);text-align:center;outline:none}
+.pset input:focus{border-color:var(--accent)}
+.add-set{min-height:44px;align-self:flex-start;padding:0 18px}
 </style>
 </head>
 <body>
@@ -764,8 +771,35 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
     var items = rec.items || {};
     return Object.keys(items).some(function (id) {
       var it = items[id] || {};
-      return !!(it.done || it.pain || String(it.weight || '').trim() || String(it.reps || '').trim() || String(it.sets || '').trim() || String(it.effort || '').trim());
+      return !!(it.done || it.pain || String(it.weight || '').trim() || String(it.reps || '').trim() || String(it.sets || '').trim() || String(it.effort || '').trim() || setLogText(it.setLog));
     });
+  }
+  function setLogOf(iso, id) {
+    var rec = dayRec(iso, false);
+    var it = rec && rec.items ? rec.items[id] : null;
+    return it && Array.isArray(it.setLog) ? it.setLog : [];
+  }
+  function setLogText(log) {
+    return (log || []).filter(function (x) { return x && (String(x.w || '').trim() || String(x.r || '').trim()); })
+      .map(function (x) { return (String(x.w || '').trim() || 'BW') + '×' + (String(x.r || '').trim() || '?'); }).join(', ');
+  }
+  function prescribedSets(detail) {
+    var m = /(\d+)\s*[×x]/.exec(detail || '');
+    return m ? Math.min(parseInt(m[1], 10), 8) : 3;
+  }
+  function targetWeight(id) {
+    var m = /(\d+(?:\.\d+)?)\s*lb/.exec(SUGGEST[id] || '');
+    return m ? m[1] : '';
+  }
+  function setSetField(id, idx, key, value) {
+    var rec = touchDay();
+    if (!rec.items[id]) rec.items[id] = blankSaved();
+    var it = rec.items[id];
+    if (!Array.isArray(it.setLog)) it.setLog = [];
+    while (it.setLog.length <= idx) it.setLog.push({ w: '', r: '' });
+    it.setLog[idx][key] = value;
+    persist();
+    markSaved();
   }
   function blankSaved() {
     return { done: false, weight: '', reps: '', sets: '', effort: '', pain: false };
@@ -788,6 +822,7 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
     var dates = Object.keys(days).filter(function (d) { return d < before; }).sort().reverse();
     for (var i = 0; i < dates.length; i++) {
       var it = days[dates[i]].items && days[dates[i]].items[id];
+      if (it && setLogText(it.setLog)) return { date: dates[i], text: setLogText(it.setLog) };
       if (it && (String(it.weight || '').trim() || String(it.reps || '').trim() || String(it.sets || '').trim())) {
         return { date: dates[i], weight: it.weight || '', reps: it.reps || '', sets: it.sets || '', effort: it.effort || '' };
       }
@@ -858,11 +893,24 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
         if (SUGGEST[it.id]) html += '<div class="suggest">Suggested: ' + esc(SUGGEST[it.id]) + '</div>';
         html += '</div></div>';
         if (it.kind === 'strength') {
-          html += '<div class="set-row">';
-          html += '<input data-id="' + esc(it.id) + '" data-field="weight" inputmode="decimal" autocomplete="off" placeholder="lb" aria-label="Weight" value="' + esc(saved.weight) + '">';
-          html += '<input data-id="' + esc(it.id) + '" data-field="reps" inputmode="numeric" autocomplete="off" placeholder="reps" aria-label="Reps" value="' + esc(saved.reps) + '">';
-          html += '<input data-id="' + esc(it.id) + '" data-field="sets" inputmode="numeric" autocomplete="off" placeholder="sets" aria-label="Sets" value="' + esc(saved.sets) + '">';
+          var log = setLogOf(selected, it.id);
+          var rec0 = dayRec(selected, false);
+          var extraN = rec0 && rec0.items && rec0.items[it.id] && rec0.items[it.id].extraSets ? rec0.items[it.id].extraSets : 0;
+          var nSets = Math.max(prescribedSets(it.detail) + extraN, log.length);
+          var tw = targetWeight(it.id);
+          html += '<div class="sets-grid">';
+          for (var si = 0; si < nSets; si++) {
+            var sv = log[si] || {};
+            html += '<div class="pset"><span class="pset-n">' + (si + 1) + '</span>';
+            html += '<input data-id="' + esc(it.id) + '" data-field="setw" data-idx="' + si + '" inputmode="decimal" autocomplete="off" placeholder="' + esc(tw ? tw + ' lb' : 'lb') + '" aria-label="Set ' + (si + 1) + ' weight" value="' + esc(sv.w || '') + '">';
+            html += '<span class="pset-x">×</span>';
+            html += '<input data-id="' + esc(it.id) + '" data-field="setr" data-idx="' + si + '" inputmode="numeric" autocomplete="off" placeholder="reps" aria-label="Set ' + (si + 1) + ' reps" value="' + esc(sv.r || '') + '">';
+            html += '</div>';
+          }
+          html += '<button type="button" class="btn small secondary add-set" data-addset="' + esc(it.id) + '">+ set</button>';
           html += '</div>';
+          var legacy = savedItem(selected, it.id);
+          if (!log.length && (legacy.weight || legacy.reps)) html += '<div class="last-line">Earlier log: ' + esc([legacy.weight && legacy.weight + ' lb', legacy.sets && legacy.sets + '×', legacy.reps].filter(Boolean).join(' ')) + '</div>';
           html += '<div class="flags-row">';
           html += '<label class="flag-check effort">Effort <input data-id="' + esc(it.id) + '" data-field="effort" inputmode="numeric" autocomplete="off" placeholder="1–10" aria-label="Effort" value="' + esc(saved.effort) + '"></label>';
           html += '<label class="flag-check"><input type="checkbox" data-id="' + esc(it.id) + '" data-field="pain"' + (saved.pain ? ' checked' : '') + '> Pain</label>';
@@ -874,7 +922,7 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
             if (String(last.sets).trim()) bits.push(String(last.sets).trim() + '×');
             if (String(last.reps).trim()) bits.push(String(last.reps).trim());
             if (String(last.effort).trim()) bits.push('RPE ' + String(last.effort).trim());
-            html += '<div class="last-line">Last ' + esc(pretty(last.date, true)) + ': ' + esc(bits.join(' ')) + '</div>';
+            html += '<div class="last-line">Last ' + esc(pretty(last.date, true)) + ': ' + esc(last.text || bits.join(' ')) + '</div>';
           }
         } else {
           html += '<div class="flags-row">';
@@ -1027,6 +1075,7 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
           var saved = rec.items && rec.items[it.id];
           if (saved && saved.done) done += 1;
           if (saved && saved.pain) painCount += 1;
+          if (saved && it.kind === 'strength' && setLogText(saved.setLog)) { loads.push(it.name + ': ' + setLogText(saved.setLog)); return; }
           if (saved && it.kind === 'strength' && (String(saved.weight || '').trim() || String(saved.reps || '').trim())) {
             var extra = [];
             if (String(saved.weight || '').trim()) extra.push(String(saved.weight).trim() + 'lb');
@@ -1042,7 +1091,7 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
       html += '<button type="button" class="hist-row" data-date="' + iso + '">';
       html += '<div class="when">' + esc(pretty(iso, true)) + '</div>';
       html += '<div class="meta">' + esc(rec.title || plan.title) + (total ? ' · ' + done + '/' + total : '') + '</div>';
-      if (loads.length) html += '<div class="loads">' + esc(loads.slice(0, 3).join(' · ')) + (loads.length > 3 ? ' …' : '') + '</div>';
+      if (loads.length) html += '<div class="loads">' + esc(loads.join(' · ')) + '</div>';
       if (painCount) html += '<div class="pain-tag">Pain flagged ×' + painCount + '</div>';
       if ((rec.note || '').trim()) html += '<div class="meta">' + esc(rec.note.trim()) + '</div>';
       html += '</button>';
@@ -1083,6 +1132,8 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
       renderWorkout();
       return;
     }
+    var add = e.target.closest('[data-addset]');
+    if (add) { var r1 = touchDay(); var aid = add.dataset.addset; if (!r1.items[aid]) r1.items[aid] = blankSaved(); r1.items[aid].extraSets = (r1.items[aid].extraSets || 0) + 1; persist(); renderWorkout(); return; }
     var dot = e.target.closest('.streak-dot');
     if (dot && dot.dataset.date) { selected = dot.dataset.date; renderWorkout(); return; }
     var row = e.target.closest('[data-row]');
@@ -1103,6 +1154,7 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
     var t = e.target;
     if (!t) return;
     if (t.id === 'day-note') { setNote(t.value); return; }
+    if (t.dataset && (t.dataset.field === 'setw' || t.dataset.field === 'setr')) { setSetField(t.dataset.id, parseInt(t.dataset.idx, 10), t.dataset.field === 'setw' ? 'w' : 'r', t.value); return; }
     if (t.dataset && t.dataset.id && t.dataset.field && t.dataset.field !== 'done' && t.dataset.field !== 'pain') {
       setField(t.dataset.id, t.dataset.field, t.value);
     }
