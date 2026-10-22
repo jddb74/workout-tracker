@@ -345,6 +345,7 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
   var CHEST_WED_START = '2026-10-06';
   var DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
   var DAY_SHORT = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  var WEEKDAY_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   var DAY_TITLE = {
     monday: 'Lifting A',
     tuesday: 'Cardio + PT',
@@ -830,6 +831,112 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
     return null;
   }
 
+
+  var TRAINER_EMAIL = 'brewer.justin@gmail.com';
+  var MAIL_MAX = 1800;
+  var pendingParts = [];
+  function daySig(rec) { try { return JSON.stringify({ n: rec.note || '', i: rec.items || {} }); } catch (e) { return ''; } }
+  function unsentDates() {
+    var data = load(); var sent = data.sent || {};
+    return Object.keys(data.days).filter(function (d) { return hasLog(data.days[d]) && sent[d] !== daySig(data.days[d]); }).sort();
+  }
+  function daySummary(iso) {
+    var rec = dayRec(iso, false); if (!rec) return '';
+    var plan = getPlan(iso);
+    var lines = [iso + ' ' + WEEKDAY_LONG[weekdayET(iso)] + ' - ' + (rec.title || plan.title)];
+    var seen = {};
+    plan.sections.forEach(function (sec) {
+      sec.items.forEach(function (it) {
+        if (seen[it.id]) return; seen[it.id] = 1;
+        var sv = rec.items && rec.items[it.id]; if (!sv) return;
+        var txt = setLogText(sv.setLog);
+        if (!txt && (String(sv.weight || '').trim() || String(sv.reps || '').trim())) {
+          txt = (String(sv.weight || '').trim() ? String(sv.weight).trim() + 'lb ' : '') + (String(sv.sets || '').trim() ? String(sv.sets).trim() + '×' : '') + String(sv.reps || '').trim();
+        }
+        var bits = [];
+        if (txt) bits.push(txt.trim());
+        if (String(sv.effort || '').trim()) bits.push('effort ' + String(sv.effort).trim());
+        if (sv.pain) bits.push('PAIN');
+        if (bits.length) lines.push('- ' + it.name + ': ' + bits.join(' | '));
+        else if (sv.done && it.kind !== 'strength') lines.push('- ' + it.name + ': done');
+      });
+    });
+    if ((rec.note || '').trim()) lines.push('Note: ' + rec.note.trim());
+    return lines.join('\n');
+  }
+  function splitChunks(text) {
+    var out = [];
+    while (text.length > MAIL_MAX) {
+      var cut = text.lastIndexOf('\n', MAIL_MAX); if (cut < 200) cut = MAIL_MAX;
+      out.push(text.slice(0, cut)); text = text.slice(cut).replace(/^\n/, '');
+    }
+    if (text) out.push(text);
+    return out;
+  }
+  function buildParts(dates) {
+    var parts = [], cur = '';
+    dates.forEach(function (d) {
+      var t = daySummary(d); if (!t) return;
+      splitChunks(t).forEach(function (c) {
+        if (cur && cur.length + c.length + 2 > MAIL_MAX) { parts.push(cur); cur = ''; }
+        cur = cur ? cur + '\n\n' + c : c;
+      });
+    });
+    if (cur) parts.push(cur);
+    return parts;
+  }
+  function logDates(fallbackIso) {
+    var d = unsentDates();
+    if (!d.length && fallbackIso && hasLog(dayRec(fallbackIso, false))) d = [fallbackIso];
+    return d;
+  }
+  function markSent(dates) {
+    var data = load(); if (!data.sent) data.sent = {};
+    dates.forEach(function (d) { if (data.days[d]) data.sent[d] = daySig(data.days[d]); });
+    persist();
+  }
+  function mailtoFor(body, i, n) {
+    var subj = 'Workout log ' + todayISO() + (n > 1 ? ' (' + (i + 1) + '/' + n + ')' : '');
+    return 'mailto:' + TRAINER_EMAIL + '?subject=' + encodeURIComponent(subj) + '&body=' + encodeURIComponent(body);
+  }
+  function openPart() {
+    if (!pendingParts.length) return;
+    var p = pendingParts.shift();
+    window.location.href = mailtoFor(p.body, p.i, p.n);
+    renderSendMore();
+  }
+  function renderSendMore() {
+    document.querySelectorAll('.send-more').forEach(function (b) {
+      if (pendingParts.length) { b.style.display = ''; b.textContent = 'Send part ' + (pendingParts[0].i + 1) + ' of ' + pendingParts[0].n; }
+      else b.style.display = 'none';
+    });
+  }
+  function sendToTrainer(fallbackIso) {
+    var dates = logDates(fallbackIso);
+    var parts = buildParts(dates);
+    if (!parts.length) { showToast('Nothing new to send'); return; }
+    pendingParts = parts.map(function (b, i) { return { body: b, i: i, n: parts.length }; });
+    markSent(dates);
+    openPart();
+    showToast(parts.length > 1 ? 'Email 1 of ' + parts.length + ' — tap Send part 2 after' : 'Opening email');
+  }
+  function copyLog(fallbackIso) {
+    var text = buildParts(logDates(fallbackIso)).join('\n\n');
+    if (!text) { showToast('Nothing new to copy'); return; }
+    var done = function () { showToast('Log copied'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
+    else { fallbackCopy(text); done(); }
+  }
+  function fallbackCopy(text) {
+    var ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta);
+  }
+  function sendBarHTML() {
+    var n = unsentDates().length;
+    return '<div class="tools send-bar" style="gap:8px;flex-wrap:wrap"><button type="button" class="btn" data-send="mail">Send to trainer' + (n ? ' (' + n + ' day' + (n > 1 ? 's' : '') + ')' : '') + '</button>' +
+      '<button type="button" class="btn secondary" data-send="copy">Copy log</button>' +
+      '<button type="button" class="btn secondary send-more" data-send="more" style="display:none"></button></div>';
+  }
   function showToast(msg) {
     var t = document.getElementById('toast');
     t.textContent = msg;
@@ -939,10 +1046,12 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
       html += '<textarea id="day-note" placeholder="Pain, sleep, how it felt">' + esc(note) + '</textarea></div>';
       html += '<div class="tools"><span class="sub" style="margin:0">localStorage only</span>';
       html += '<button type="button" class="btn danger" id="clear-day">Clear day</button></div>';
+      html += sendBarHTML();
     } else {
       html += '<div class="card"><div class="ex-name">' + esc(plan.title) + '</div><div class="ex-target" style="margin-top:6px">' + esc(plan.subtitle) + '</div></div>';
     }
     document.getElementById('page-workout').innerHTML = html;
+    renderSendMore();
     if (!plan.rest) setProgress(done, total);
   }
 
@@ -1060,6 +1169,7 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
     var data = load();
     var dates = Object.keys(data.days).filter(function (d) { return hasLog(data.days[d]); }).sort().reverse();
     var html = '<h1>History</h1><p class="sub">Logged days (this phone).</p>';
+    html += sendBarHTML();
     if (!dates.length) {
       html += '<div class="card">No days logged yet.</div>';
     }
@@ -1097,6 +1207,7 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
       html += '</button>';
     });
     document.getElementById('page-history').innerHTML = html;
+    renderSendMore();
   }
 
   function renderGuardrails() {
@@ -1116,7 +1227,17 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
     document.getElementById('page-guardrails').innerHTML = html;
   }
 
+  function handleSend(e, iso) {
+    var b = e.target.closest('[data-send]'); if (!b) return false;
+    if (b.dataset.send === 'mail') sendToTrainer(iso);
+    else if (b.dataset.send === 'copy') copyLog(iso);
+    else openPart();
+    var page = document.querySelector('.page.active');
+    setTimeout(function () { if (page && page.id === 'page-history') renderHistory(); else renderWorkout(); }, 50);
+    return true;
+  }
   document.getElementById('page-workout').addEventListener('click', function (e) {
+    if (handleSend(e, selected)) return;
     if (e.target.id === 'jump-today' || e.target.closest('#jump-today')) {
       selected = todayISO();
       renderWorkout();
@@ -1176,6 +1297,7 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
     if (btn && btn.dataset.date) showPage('workout', btn.dataset.date);
   });
   document.getElementById('page-history').addEventListener('click', function (e) {
+    if (handleSend(e, null)) return;
     var btn = e.target.closest('.hist-row');
     if (btn && btn.dataset.date) showPage('workout', btn.dataset.date);
   });
