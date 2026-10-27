@@ -523,6 +523,87 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
     if ((key === 'wednesday' || key === 'saturday') && wk >= 2) return 'Fasting: 16:8. This is a 24-hour fast option (once a week; Wed, Sat, or Sun). Full protein before and after.';
     return 'Fasting: 16:8, window opens after training. Protein 180–195 g, ~2,300–2,500 kcal.';
   }
+
+  // ===== PT plan v2 (from Tue Oct 27, 2026; see pt_plan.md) =====
+  var PT3_START = '2026-10-27';
+  function vitem(id, name, detail, ph) { var it = item(id, name, detail, 'value'); it.ph = ph; return it; }
+  function moveMenu() {
+    return { title: 'Move every day (pick at least 1) — pain changes WHAT, not WHETHER', items: [
+      item('mv-walk', 'Walk outside', '20–60 min · any pace · sunlight · 8–10k steps'),
+      item('mv-swim', 'Easy swim', 'Freestyle or kickboard flutter kick · no breaststroke kick · kick-only if scapula cranky'),
+      item('mv-bike', 'Easy bike', 'Conversation pace · seat up if hip pinches'),
+      item('mv-plunge', 'Cold plunge', '2–5 min · not alone · get out slowly · 4–6 h after lifting'),
+      item('mv-krav', 'Krav, modified', 'Footwork, drills, kicks knee-height or lower · no punching/pads'),
+      item('mv-floor', '10-min floor', '90/90 breathing, open books, cat-camel, supported hip airplanes')
+    ]};
+  }
+  function pt3Upper() {
+    return { title: 'PT warm-up (~8 min) — scapula + wrist', items: [
+      item('p3-ob', 'Open books + foam-roller T-spine extension', '8/side · 8'),
+      item('p3-wsl', 'Wall slide with lift-off + wall push-up plus', '10 · 12 slow'),
+      item('p3-erwy', 'Band ER at side + wall Y', '15 · 10 thumbs up'),
+      item('p3-wr', 'Wrist: pronator (palm-down) hold + ECU (pinky-side) hold', '3×30s each · 30–50% effort · wrap on to lift')
+    ]};
+  }
+  function pt3Lower(key) {
+    var hip = key === 'monday'
+      ? item('p3-hipA', 'Hip: flexor stretch + adductor rock-back + supported airplane', '45s/side · 10 · 5/side · pain-free range')
+      : item('p3-hipB', 'Hip: 90/90 switches + clamshell + supported airplane', '8 · 15/side · 5/side · pain-free range');
+    return { title: 'PT warm-up (~8 min) — T-spine, wrist, hip, back', items: [
+      item('p3-ob', 'Open books + foam-roller T-spine extension', '8/side · 8'),
+      item('p3-wr', 'Wrist: pronator (palm-down) hold + ECU (pinky-side) hold', '3×30s each · 30–50% effort · wrap on to lift'),
+      hip,
+      item('p3-mcg', 'McGill big 3 (short)', 'Curl-up, side plank, bird dog · 3×10s each')
+    ]};
+  }
+  function pt3Rehab() {
+    return [
+      { title: 'Swim (MIN)', items: [mitem('v2-swim', 'Easy swim', '20–30 min · kickboard OK · NO breaststroke kick')] },
+      { title: 'Scapula (left) — Stage 1', items: [
+        item('r3-ob', 'Open books', '2×8/side'),
+        item('r3-roll', 'Foam-roller T-spine extension', '2×8 · mid-back only'),
+        item('r3-wsl', 'Wall slide with lift-off', '2×10'),
+        item('r3-wpp', 'Wall push-up plus', '3×12 · slow'),
+        item('r3-wy', 'Wall or prone Y', '2×10 · thumbs up · no weight'),
+        item('r3-er', 'Band ER, elbow at side', '2×15'),
+        item('r3-neck', 'Chin tucks + easy neck turns (only if neck screen positive)', '10×5s · 10/side')
+      ]},
+      { title: 'Wrist (right) — Stage 1', items: [
+        item('r3-pq', 'Pronator hold (resist palm-down)', '5×30s · 30–50%'),
+        item('r3-sup', 'Supination hold (resist palm-up)', '3×30s'),
+        item('r3-ecu', 'ECU hold (pinky side up into other hand)', '5×30s'),
+        item('r3-rot', 'Unloaded rotation, small pain-free range', '10 each way')
+      ]},
+      { title: 'Hip (left) + back — Stage 1', items: [
+        item('r3-hf', 'Half-kneeling hip flexor, glute squeezed', '2×45s/side'),
+        item('r3-9090', '90/90 hip switches, hands behind', '2×8'),
+        item('r3-rock', 'Adductor rock-back', '2×10'),
+        item('r3-air', 'Supported hip airplane', '2×5/side'),
+        item('r3-mcg', 'McGill big 3', 'Curl-up, side plank on knees, bird dog · 3×10s each'),
+        item('r3-clam', 'Clamshell or side-lying abduction', '2×15/side')
+      ]},
+      { title: 'Optional', items: [
+        item('r3-plunge', 'Cold plunge', '2–5 min · not alone'),
+        item('v2-krav', 'Krav — footwork + low kicks only', 'No punching or pads · kicks knee height or lower · stop >3/10')
+      ]}
+    ];
+  }
+  function selfTest() {
+    return { title: 'Self-test (every 2nd Sunday, ~10 min) — record numbers', items: [
+      vitem('st-neck', 'Neck screen: turn, side-bend, look up', 'Does it bring on the L scapula pain? Any arm tingling = tell me', 'e.g. rot L brings pain 3/10, no tingling'),
+      vitem('st-wpu', 'Wall push-up ×10 + incline (bench) push-up reps', 'Scapula pain 0–10 · reps at ≤3/10', 'e.g. wall 2/10; bench 10 reps 3/10'),
+      vitem('st-wing', 'Scapular winging (video 10 wall push-ups)', 'Does the L blade lift?', 'yes / no'),
+      vitem('st-er', 'Band ER reps to fatigue, L vs R', 'Same band', 'e.g. L 18 / R 25'),
+      vitem('st-circ', 'Wrist circumference R vs L (string)', 'cm at the crease', 'e.g. R 18.5 / L 17.6'),
+      vitem('st-door', 'Doorknob test (palm up / palm down, unloaded)', 'Pain 0–10 each way', 'e.g. up 4 / down 2'),
+      vitem('st-press', 'Chair press-up, hands flat', 'Pain 0–10', 'e.g. 3'),
+      vitem('st-fadir', 'Hip pinch test (FADIR) L vs R', 'Pain 0–10', 'e.g. L 4 / R 0'),
+      vitem('st-ir', 'Seated hip IR, L vs R / 90-90 sit', 'Degrees or yes/no', 'e.g. L 20° / R 35°, 90-90 no'),
+      vitem('st-slsq', 'Single-leg squat to chair ×5', 'Knee cave / pelvis drop / pain', 'e.g. L cave, 2/10'),
+      vitem('st-sp', 'Side plank hold', 'Seconds L / R', 'e.g. 35 / 45'),
+      vitem('st-kick', 'Krav kick height pain-free', 'knee / waist / chest', 'e.g. knee')
+    ]};
+  }
   function v2Plan(iso) {
     var key = dayKeyET(iso);
     var wk = v2Week(iso), dl = v2Deload(iso);
@@ -531,7 +612,7 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
     var dlTag = dl ? ' DELOAD WEEK: 2 sets, ~10% lighter, RIR 4.' : '';
     var lift = function (secItems) {
       base.note = V2_MIN_NOTE + dlTag + ' ' + V2_LIFT_NOTE + ' ' + v2Fast(iso, key);
-      base.sections = [v2Primer(), { title: 'Workout (MIN = minimum version)', items: secItems }];
+      base.sections = [iso >= PT3_START ? ((key === 'monday' || key === 'thursday') ? pt3Lower(key) : pt3Upper()) : v2Primer(), { title: 'Workout (MIN = minimum version)', items: secItems }];
     };
     if (key === 'monday') lift([
       mitem('v2-dl-trap', 'Trap bar deadlift, high handles, straps', '4×6–8 · main lift · RIR 2–3', 'strength'),
@@ -544,7 +625,7 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
     else if (key === 'tuesday') {
       lift([
         mitem('v2-ohp', 'Overhead press', '4×6–8 · main lift · stop >3/10', 'strength'),
-        item('v2-pushup-tue', 'Push-up on handles or fists (wrist neutral)', '3×8–15 · RIR 2–3 · stop if shoulder >3/10 · elevate hands if needed', 'strength'),
+        (iso >= PT3_START ? item('v2-ipush-tue', 'Incline push-up plus (counter/bench)', '3×8–12 · ≤3/10 scapula · lower ~6 in when all sets ≤3/10', 'strength') : item('v2-pushup-tue', 'Push-up on handles or fists (wrist neutral)', '3×8–15 · RIR 2–3 · stop if shoulder >3/10 · elevate hands if needed', 'strength')),
         mitem('v2-pulldown', 'Neutral-grip lat pulldown, straps', '3×8–12', 'strength'),
         item('v2-row-cable', 'Seated cable row, neutral, straps', '3×10–12', 'strength'),
         item('v2-latraise', 'Cable lateral raise', '3×12–15 · light', 'strength'),
@@ -552,7 +633,7 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
         mitem('v2-pushdown', 'V-bar cable pushdown, wrist straight', '3×10–12', 'strength'),
         item('v2-hammer', 'Neutral DB hammer curl, no twisting', '3×10–12', 'strength')
       ]);
-      if (iso === '2026-10-27') base.sections.push({ title: 'Chest retest (light)', items: [
+      if (iso === '2026-10-27' && false) base.sections.push({ title: 'Chest retest (light)', items: [
         item('v2-chest-retest', 'HS chest press or neutral DB floor press', '2×12 light · ≤3/10 and fine next morning → add 2×10–12 Tue/Fri', 'strength')
       ]});
     }
@@ -566,15 +647,19 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
     ]);
     else if (key === 'friday') lift([
       mitem('v2-lm', 'Half-kneeling landmine press', '4×8–10 · main lift', 'strength'),
-        item('v2-pushup-fri', 'Push-up on handles or fists (wrist neutral)', '3×8–15 · RIR 2–3 · stop if shoulder >3/10 · elevate hands if needed', 'strength'),
+        (iso >= PT3_START ? item('v2-ipush-fri', 'Incline push-up plus (counter/bench)', '3×8–12 · ≤3/10 scapula · lower ~6 in when all sets ≤3/10', 'strength') : item('v2-pushup-fri', 'Push-up on handles or fists (wrist neutral)', '3×8–15 · RIR 2–3 · stop if shoulder >3/10 · elevate hands if needed', 'strength')),
       mitem('v2-row-hs', 'Hammer Strength row, neutral, straps', '3×8–12', 'strength'),
       item('v2-pullup', 'Neutral pull-up (assisted OK) or pulldown', '3×6–10', 'strength'),
       item('v2-revpec', 'Reverse pec deck', '3×12–15', 'strength'),
       item('v2-shrug', 'DB shrug, straps, no roll', '2×12', 'strength'),
-      item('v2-ohext', 'Overhead rope extension', '3×10–12 · stop if shoulder >3/10', 'strength'),
+      item('v2-ohext', 'Overhead rope extension', '3×10–12 · swap to V-bar pushdown if scapula complains', 'strength'),
       mitem('v2-cablecurl', 'Cable curl, rope', '3×10–12', 'strength')
     ]);
     else if (key === 'wednesday' || key === 'saturday') {
+      if (iso >= PT3_START) {
+        base.note = 'Rehab + swim (~20 min + swim). MIN = swim. Pain 0–3/10 OK; worse next morning → step back 2 days. ' + v2Fast(iso, key);
+        base.sections = pt3Rehab();
+      } else {
       base.note = 'Fine-tuned rehab day. MINIMUM VERSION: Daily 15 + easy swim. ' + PT_NOTE + ' ' + v2Fast(iso, key);
       base.sections = [
         { title: 'Swim (MIN)', items: [mitem('v2-swim', 'Easy swim', '20–30 min · kickboard + fins, relaxed freestyle · NO breaststroke kick')] },
@@ -583,6 +668,13 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
           item('v2-krav', 'Krav Maga — LIGHT only', 'Drills, footwork, technique. NO punching or pad work. Stop >3/10')
         ]}
       ];
+      }
+    }
+    else if (iso >= PT3_START) {
+      base.subtitle = 'Off / light. Walk, easy swim, or bike + 10-min floor. ' + v2Fast(iso, key);
+      base.note = base.subtitle;
+      base.sections = [{ title: 'Light', items: [item('s3-floor', '10-min floor', '90/90 breathing, open books, cat-camel, supported airplanes')] }];
+      if (v2Week(iso) % 2 === 0) base.sections.push(selfTest());
     }
     else {
       base.subtitle = 'Off, or an easy walk. Daily 15 optional. ' + v2Fast(iso, key);
@@ -593,7 +685,10 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
   }
   function getPlan(iso) {
     var plan = iso >= V2_START ? v2Plan(iso) : basePlan(iso);
-    if (iso >= DAILY_START) {
+    if (iso >= PT3_START) {
+      plan.sections = [moveMenu()].concat(plan.sections);
+      plan.rest = false;
+    } else if (iso >= DAILY_START) {
       plan.sections = [{ title: (iso >= V2_START ? 'Daily 15 (MIN on rehab days; lifting days: primer covers shoulder/wrist)' : 'Daily 15 — Bad day? These 7 alone are a win. (progress every 2 weeks)'), items: dailyItems() }].concat(plan.sections);
       plan.rest = false;
     }
@@ -772,7 +867,7 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
     var items = rec.items || {};
     return Object.keys(items).some(function (id) {
       var it = items[id] || {};
-      return !!(it.done || it.pain || String(it.weight || '').trim() || String(it.reps || '').trim() || String(it.sets || '').trim() || String(it.effort || '').trim() || setLogText(it.setLog));
+      return !!(it.done || it.pain || String(it.weight || '').trim() || String(it.reps || '').trim() || String(it.sets || '').trim() || String(it.effort || '').trim() || String(it.val || '').trim() || setLogText(it.setLog));
     });
   }
   function setLogOf(iso, id) {
@@ -803,7 +898,7 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
     markSaved();
   }
   function blankSaved() {
-    return { done: false, weight: '', reps: '', sets: '', effort: '', pain: false };
+    return { done: false, weight: '', reps: '', sets: '', effort: '', pain: false, val: '' };
   }
   function savedItem(iso, id) {
     var rec = dayRec(iso, false);
@@ -815,7 +910,8 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
       reps: it.reps != null ? String(it.reps) : '',
       sets: it.sets != null ? String(it.sets) : '',
       effort: it.effort != null ? String(it.effort) : '',
-      pain: !!it.pain
+      pain: !!it.pain,
+      val: it.val != null ? String(it.val) : ''
     };
   }
   function lastPerf(id, before) {
@@ -855,6 +951,7 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
         }
         var bits = [];
         if (txt) bits.push(txt.trim());
+        if (String(sv.val || '').trim()) bits.push(String(sv.val).trim());
         if (String(sv.effort || '').trim()) bits.push('effort ' + String(sv.effort).trim());
         if (sv.pain) bits.push('PAIN');
         if (bits.length) lines.push('- ' + it.name + ': ' + bits.join(' | '));
@@ -1031,6 +1128,8 @@ h2 { font-size: 16px; margin: 18px 0 8px; font-weight: 600; }
             if (String(last.effort).trim()) bits.push('RPE ' + String(last.effort).trim());
             html += '<div class="last-line">Last ' + esc(pretty(last.date, true)) + ': ' + esc(last.text || bits.join(' ')) + '</div>';
           }
+        } else if (it.kind === 'value') {
+          html += '<div class="flags-row"><input class="val-input" style="flex:1;min-width:0;padding:8px;font-size:16px" data-id="' + esc(it.id) + '" data-field="val" autocomplete="off" placeholder="' + esc(it.ph || 'record result') + '" aria-label="' + esc(it.name) + ' result" value="' + esc(saved.val) + '"></div>';
         } else {
           html += '<div class="flags-row">';
           html += '<label class="flag-check effort">Effort <input data-id="' + esc(it.id) + '" data-field="effort" inputmode="numeric" autocomplete="off" placeholder="1–10" aria-label="Effort" value="' + esc(saved.effort) + '"></label>';
